@@ -6,3 +6,5 @@ scipy
 ta-lib
 pynance
 matplotlib
+textblob
+seaborn
