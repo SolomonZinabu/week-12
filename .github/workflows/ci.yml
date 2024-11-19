@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -13,18 +13,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Checkout the code
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # Set up Python environment
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
+    # Install dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    # Run tests
     - name: Run tests
       run: pytest tests/
+
+    # Linting with Flake8
+    - name: Lint Python Code
+      run: flake8 scripts tests
+
+    # Check formatting with Black
+    - name: Format Python Code
+      run: black scripts tests --check
+
+    # Generate documentation
+    - name: Generate Documentation
+      run: |
+        mkdir -p docs
+        pdoc --html scripts --output-dir docs --force
+        mv docs/scripts/* docs/
+        rm -rf docs/scripts
+
+    # Deploy documentation to GitHub Pages
+    - name: Deploy Documentation to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: token
+        publish_dir: ./docs
+
+    # Deploy to Heroku
+    - name: Deploy to Heroku
+      env:
+        HEROKU_API_KEY: api-key
+      run: |
+        heroku git:remote -a <your-app-name>
+        git push heroku main
+
+    # Notify Slack on failure
+    - name: Notify Slack on Failure
+      if: failure()
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"Build failed: $GITHUB_REPOSITORY"}' \
+        slack url
