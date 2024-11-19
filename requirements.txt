@@ -8,3 +8,5 @@ pynance
 matplotlib
 textblob
 seaborn
+pytest
+pdoc
